@@ -456,7 +456,8 @@ function adicionarIndicado(){
     </div>
     <div class="field">
       <label>Nome Completo <span>*</span></label>
-      <input type="text" id="nome-${idx}" placeholder="Preencha o CPF para carregar" readonly style="background:#f8f8f8;cursor:not-allowed"/>
+      <input type="text" id="nome-${idx}" placeholder="Preencha o CPF primeiro"/>
+      <div class="field-hint" id="nome-hint-${idx}" style="display:none">✏️ Candidato externo — digite o nome completo.</div>
     </div>
     <div class="field">
       <label>WhatsApp <span>*</span></label>
@@ -520,8 +521,27 @@ async function verificarIndicado(idx){
   }
   cpfEl.className='ok';msgEl.className='field-msg ok';
   const nome=jafunc&&jafunc.length?jafunc[0].nome:'';
-  msgEl.textContent=nome?`✓ Encontrado: ${nome}`:'✓ CPF válido — candidato externo.';
-  nomeEl.value=nome;
+  if(nome){
+    // found in DB - fill and lock
+    nomeEl.value=nome;
+    nomeEl.readOnly=true;
+    nomeEl.style.background='#f8f8f8';
+    nomeEl.style.cursor='not-allowed';
+    msgEl.textContent=`✓ Encontrado: ${nome}`;
+    const hint=document.getElementById('nome-hint-'+idx);
+    if(hint) hint.style.display='none';
+  }else{
+    // external candidate - allow manual input
+    nomeEl.value='';
+    nomeEl.readOnly=false;
+    nomeEl.style.background='';
+    nomeEl.style.cursor='';
+    nomeEl.placeholder='Digite o nome completo do candidato';
+    nomeEl.focus();
+    msgEl.textContent='✓ CPF válido — candidato externo. Digite o nome.';
+    const hint=document.getElementById('nome-hint-'+idx);
+    if(hint) hint.style.display='block';
+  }
   indicados[idx]={...indicados[idx],cpf,nome};
 }
 
@@ -535,6 +555,7 @@ async function enviar(){
     if(cpf.length!==11||!indicados[i].cpf){erroCard(2,`Indicação ${i+1}: CPF não verificado.`);return;}
     if(wpp.length<10){erroCard(2,`Indicação ${i+1}: WhatsApp inválido.`);return;}
     indicados[i].wpp=document.getElementById('wpp-'+i).value;
+    indicados[i].nome=document.getElementById('nome-'+i)?.value?.trim()||indicados[i].nome||'';
   }
   loading(true,'Enviando indicações...');
   let erros=[];
