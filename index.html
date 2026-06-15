@@ -206,23 +206,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="field-msg" id="cpf-msg"></div>
     <div class="func-card" id="func-card">
       <div class="func-card-nome" id="func-nome"></div>
-      <div class="func-card-info" id="func-info"></div>
     </div>
   </div>
-  <div class="field">
-    <label>Nome Completo <span>*</span></label>
-    <input type="text" id="nome-ind" placeholder="Carregado pelo CPF" readonly style="background:#f8f8f8;cursor:not-allowed"/>
-  </div>
-  <div class="field">
-    <label>Chapa (Matrícula) <span>*</span></label>
-    <input type="text" id="chapa-ind" placeholder="Carregado pelo CPF" readonly style="background:#f8f8f8;cursor:not-allowed"/>
-  </div>
+  <input type="hidden" id="nome-ind"/>
+  <input type="hidden" id="chapa-ind"/>
   <div class="field">
     <label>WhatsApp <span>*</span></label>
     <input type="tel" id="wpp-ind" placeholder="(00) 00000-0000" maxlength="15" oninput="maskWPP(this)"/>
   </div>
   <div class="field">
-    <label>Fazenda que está indicando <span>*</span></label>
+    <label>Fazenda para onde está indicando <span>*</span></label>
     <div class="fazenda-grid" id="fazenda-grid"></div>
   </div>
   <div style="margin-top:20px">
@@ -379,11 +372,11 @@ async function buscarIndicador(){
   const cpf=soNum(document.getElementById('cpf-ind').value);
   if(cpf.length!==11)return;
   loading(true,'Buscando seus dados...');erroCard(1,'');
-  const data=await sbGet('cache_funcionarios',`cpf=eq.${cpf}&select=nome,chapa,funcao,fazenda,codsituacao,ativo,excluido`);
+  const data=await sbGet('cache_funcionarios',`cpf=eq.${cpf}&select=nome,chapa,funcao,codsituacao,ativo,excluido`);
   loading(false);
   if(!data||!data.length){
     // tenta sem filtro de ativo/excluido para pegar todos
-    const data2=await sbGet('cache_funcionarios',`cpf=eq.${cpf}&select=nome,chapa,funcao,fazenda,codsituacao,ativo,excluido`);
+    const data2=await sbGet('cache_funcionarios',`cpf=eq.${cpf}&select=nome,chapa,funcao,codsituacao,ativo,excluido`);
     if(!data2||!data2.length){
       document.getElementById('cpf-ind').className='err';
       document.getElementById('cpf-msg').className='field-msg err';
@@ -399,8 +392,9 @@ async function buscarIndicador(){
     document.getElementById('cpf-ind').className='ok';
     document.getElementById('cpf-msg').className='field-msg ok';
     document.getElementById('cpf-msg').textContent='✓ Colaborador encontrado!';
-    document.getElementById('func-nome').textContent=func.nome;
-    document.getElementById('func-info').textContent=`Chapa: ${func.chapa} · ${func.funcao} · ${func.fazenda}`;
+    const partes2=func.nome.trim().split(' ');
+    const nomeExibido2=partes2.slice(0,2).join(' ');
+    document.getElementById('func-nome').textContent='Olá, '+nomeExibido2+'!';
     document.getElementById('func-card').classList.add('show');
     return;
   }
@@ -411,8 +405,10 @@ async function buscarIndicador(){
   document.getElementById('cpf-ind').className='ok';
   document.getElementById('cpf-msg').className='field-msg ok';
   document.getElementById('cpf-msg').textContent='✓ Colaborador encontrado!';
-  document.getElementById('func-nome').textContent=func.nome;
-  document.getElementById('func-info').textContent=`Chapa: ${func.chapa} · ${func.funcao} · ${func.fazenda}`;
+  // show only first + second name for privacy
+  const partes=func.nome.trim().split(' ');
+  const nomeExibido=partes.slice(0,2).join(' ');
+  document.getElementById('func-nome').textContent='Olá, '+nomeExibido+'!';
   document.getElementById('func-card').classList.add('show');
 }
 
